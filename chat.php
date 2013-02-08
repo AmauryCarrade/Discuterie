@@ -36,14 +36,18 @@
       }
 
       .row {
-      	padding-top: 60px; 
+      	padding-top: 5px; 
       }
 
       #content {
-      	min-height: 100%;
+      	/*min-height: 100%;
         height: auto !important;
         height: 100%;
+        max-height: 100%;*/
       	overflow: auto;
+      }
+      #content .wrapper {
+      	padding: 5px;
       }
     </style>
 
@@ -57,27 +61,6 @@
   <body>
 
     <div id="wrap">
-	    <div class="navbar navbar-inverse navbar-fixed-top" style="position: absolute;">
-	      <div class="navbar-inner">
-	        <div class="container">
-	          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-	            <span class="icon-bar"></span>
-	            <span class="icon-bar"></span>
-	            <span class="icon-bar"></span>
-	          </button>
-	          <a class="brand" href="#">Discuterie</a>
-	          <div class="nav-collapse collapse">
-	          	<div class="pull-right">
-	          		<ul class="nav">
-	          			<li><a href="?do=out">Déconnexion</a></li>
-	          		</ul>
-	          	</div>
-
-	          </div><!--/.nav-collapse -->
-	        </div>
-	      </div>
-	    </div>
-
 	    <div class="container">
 
 		    <div class="row">
@@ -99,71 +82,167 @@
 		    				<h2>
 		    					<div class="pull-right">
 		    					    <div class="btn-group">
-										<a class="btn btn-dropdown-toggle btn-success" data-toggle="dropdown" href="#">
-											Connecté 
-											<span class="caret"></span> 
-										</a>
+										<button class="btn" title="Quitter le salon">
+											<span class="icon-remove"></span>
+										</button>
 										<ul class="dropdown-menu">
 											<li class="active"><a href="#">Connecté</a></li>
 											<li><a href="#">Absent</a></li>
 											<li><a href="#">Ne pas déranger</a></li>
 											<li><a href="#">Invisible</a></li>
+											<li class="divider"></li>
+											<li><a href="?do=out">Déconnexion</a></li>
 										</ul>
+										<a class="btn btn-dropdown-toggle btn-success" data-toggle="dropdown" href="#">
+											Connecté 
+											<span class="caret"></span> 
+										</a>
 									</div>
 			    				</div>
 		    					Salon 1
 		    				</h2>
 		    			</div>
 		    			<div id="content">
-		    				<p>
-		    					<strong>Amaury</strong>&nbsp;&nbsp;
-		    				</p>
-		    				<div class="muted pull-right">6 février 2013 à 18:30</div>
-		    				<p></p>
-		    				<p>
-		    					What's up?
-                  			</p>
+		    				<div class="wrapper">
+			    				<p>
+			    					<strong>Amaury</strong>&nbsp;&nbsp;
+			    				</p>
+			    				<div class="muted pull-right">6 février 2013 à 18:30</div>
+			    				<p></p>
+			    				<p>
+			    					What's up?
+	                  			</p>
 
-                  			<hr style="margin-top: 5px; margin-bottom: 5px;">
+	                  			<hr style="margin-top: 5px; margin-bottom: 5px;">
 
-							<p>
-								<strong>Emma</strong>
-							</p>
-							<div class="muted pull-right">6 février 2013 à 18:30</div>
-							<p></p>
-							<p>
-								What about no?
-							</p>
-							<p>
-								Bien et toi ?
-							</p>
+								<p>
+									<strong>Emma</strong>
+								</p>
+								<div class="muted pull-right">6 février 2013 à 18:30</div>
+								<p></p>
+								<p>
+									What about no?
+								</p>
+								<p>
+									Bien et toi ?
+								</p>
 
-							<hr style="margin-top: 5px; margin-bottom: 5px;">
-							<p>
-								<strong>Amaury</strong>
-							</p>
-							<div class="muted pull-right">6 février 2013 à 18:30</div>
-							<p></p>
-							<p>
-								Le code source : <br />
-								<pre>
-&lt;div class="tabbable tabs-left"&gt;
-	&lt;ul class="nav nav-tabs"&gt;
-		...
-	&lt;/ul&gt;
-	&lt;div class="tab-content"&gt;
-		...
+								<hr style="margin-top: 5px; margin-bottom: 5px;">
+								<p>
+									<strong>Amaury</strong>
+								</p>
+								<div class="muted pull-right">6 février 2013 à 18:30</div>
+								<p></p>
+								<p>
+									Le code source : <br />
+									<pre>
+	&lt;div class="tabbable tabs-left"&gt;
+		&lt;ul class="nav nav-tabs"&gt;
+			...
+		&lt;/ul&gt;
+		&lt;div class="tab-content"&gt;
+			...
+		&lt;/div&gt;
 	&lt;/div&gt;
-&lt;/div&gt;
-								</pre>
-							</p>
-							<p></p>
+									</pre>
+								</p>
+
+								<p>
+			    					<strong>Amaury</strong>&nbsp;&nbsp;
+			    				</p>
+			    				<div class="muted pull-right">6 février 2013 à 18:30</div>
+			    				<p></p>
+			    				<p>
+			    					What's up?
+	                  			</p>
+
+	                  			<hr style="margin-top: 5px; margin-bottom: 5px;">
+
+								<p>
+									<strong>Emma</strong>
+								</p>
+								<div class="muted pull-right">6 février 2013 à 18:30</div>
+								<p></p>
+								<p>
+									What about no?
+								</p>
+								<p>
+									Bien et toi ?
+								</p>
+
+								<hr style="margin-top: 5px; margin-bottom: 5px;">
+								<p>
+									<strong>Amaury</strong>
+								</p>
+								<div class="muted pull-right">6 février 2013 à 18:30</div>
+								<p></p>
+								<p>
+									Le code source : <br />
+									<pre>
+	&lt;div class="tabbable tabs-left"&gt;
+		&lt;ul class="nav nav-tabs"&gt;
+			...
+		&lt;/ul&gt;
+		&lt;div class="tab-content"&gt;
+			...
+		&lt;/div&gt;
+	&lt;/div&gt;
+									</pre>
+								</p>
+
+								<p>
+			    					<strong>Amaury</strong>&nbsp;&nbsp;
+			    				</p>
+			    				<div class="muted pull-right">6 février 2013 à 18:30</div>
+			    				<p></p>
+			    				<p>
+			    					What's up?
+	                  			</p>
+
+	                  			<hr style="margin-top: 5px; margin-bottom: 5px;">
+
+								<p>
+									<strong>Emma</strong>
+								</p>
+								<div class="muted pull-right">6 février 2013 à 18:30</div>
+								<p></p>
+								<p>
+									What about no?
+								</p>
+								<p>
+									Bien et toi ?
+								</p>
+
+								<hr style="margin-top: 5px; margin-bottom: 5px;">
+								<p>
+									<strong>Amaury</strong>
+								</p>
+								<div class="muted pull-right">6 février 2013 à 18:30</div>
+								<p></p>
+								<p>
+									Le code source : <br />
+									<pre>
+	&lt;div class="tabbable tabs-left"&gt;
+		&lt;ul class="nav nav-tabs"&gt;
+			...
+		&lt;/ul&gt;
+		&lt;div class="tab-content"&gt;
+			...
+		&lt;/div&gt;
+	&lt;/div&gt;
+									</pre>
+								</p>
+								<p></p>
+							</div>
 		    			</div>
 			    		<div id="post">
 			    			<form>
-							    <div class="input-append">
-							    <input type="text" id="appendedInputButton" class="span6">
-							    <button type="button" class="btn btn-primary">Envoyer</button>
+							    <textarea name="" id="messageText" class="span6" rows="1" placeholder="Envoyer un message..." style="resize: none;"></textarea>
+							    <div>
+							    	<div class="pull-right">
+							    		<button type="button" class="btn btn-primary" id="send">Envoyer</button>
+							    	</div>
+							    	<p class="muted"><small>Envoyez le message en tapant <code>Ctrl</code> + <code>Entrée</code>, ou avec le bouton.</small></p>
 							    </div>
 							</form>
 						</div>
@@ -186,6 +265,70 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="misc/js/bootstrap.js"></script>
-    <script src="misc/js/chat.js"></script>
+    <!--<script src="misc/js/chat.js"></script>-->
+    <script type="text/javascript">
+    	(function($) {
+
+			$(document).ready(function() {
+
+				var lastMessageAuthor = '',
+					me = {
+						id: '<?php echo $_SESSION['user']['id']; ?>',
+						name: '<?php echo $_SESSION['user']['name']; ?>'
+					},
+					$messageText = $('#messageText'),
+					$messages    = $('#content .wrapper'),
+					$content     = $('#content');
+
+
+				// Set the height of the chatbox
+				$content.css('height', (document.body.clientHeight - 250) + 'px')
+						.css('max-height', (document.body.clientHeight - 250) + 'px')
+						.scrollTop(1000);
+
+
+				var generateHTMLMessage = function(message, author, date, preciseDate) {
+					if(date == undefined) {
+						var months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+						dateOb = new Date();
+						day = dateOb.getDay() < 10 ? '0' + dateOb.getDay() : dateOb.getDay();
+						date = day + ' ' + months[dateOb.getMonth()] + ' ' + dateOb.getFullYear() + ' à ' + dateOb.getHours() + ':' + dateOb.getMinutes();
+						preciseDate = date + ':' + dateOb.getSeconds();
+					}
+					
+					if(lastMessageAuthor != author) {
+						return '<p><strong>' + author + '</strong></p><div class="muted pull-right" title="' + preciseDate + '">' + date + '</div><p></p><p>' + message + '</p>';
+					}
+					else {
+						return '<p>' + message + '</p>';
+					}
+
+				}
+
+				// Send a message
+				var sendMessage = function() {
+
+					var htmlMessage = generateHTMLMessage($messageText.val(), me.name);
+					
+					$messages.append(htmlMessage);
+					$content.scrollTop(100000);
+
+					lastMessageAuthor = me.name;
+
+					$messageText.val('').focus();
+				}
+
+				$('#messageText').keydown(function (e) {
+					if ((e.keyCode === 10 || e.keyCode == 13) && e.ctrlKey) { 
+						sendMessage(); 
+					}
+				});
+				$('#send').click(sendMessage);
+			});
+
+
+
+		})(jQuery);
+    </script>
   </body>
 </html>
