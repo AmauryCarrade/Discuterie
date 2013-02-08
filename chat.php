@@ -1,7 +1,9 @@
 <?php
 	if(!defined('_NO_DIRECT_ACCESS')) exit;
 
+	$pdo = SQLiteConnect();
 
+	$rooms = $pdo->query('SELECT * FROM rooms WHERE type != \'private\'')->fetchAll();
 ?>
 
 <!DOCTYPE html>
@@ -68,7 +70,7 @@
 			    	<div class="well sidebar-nav">
 						<ul class="nav nav-list">
 							<li class="nav-header">Salons</li>
-							<li class="active"><a href="#">Salon 1</a></li>
+							<li class=""><a href="#"><em>Aucun salon</em></a></li>
 							<hr />
 							<li><a href="#">Liste des salons</a></li>
 							<li><a href="#">Rejoindre un salon</a></li>
@@ -82,7 +84,7 @@
 		    				<h2>
 		    					<div class="pull-right">
 		    					    <div class="btn-group">
-										<button class="btn" title="Quitter le salon">
+										<button class="btn" title="Quitter le salon" disabled="disabled">
 											<span class="icon-remove"></span>
 										</button>
 										<ul class="dropdown-menu">
@@ -99,145 +101,15 @@
 										</a>
 									</div>
 			    				</div>
-		    					Salon 1
+		    					Aucun salon
 		    				</h2>
 		    			</div>
 		    			<div id="content">
-		    				<div class="wrapper">
-			    				<p>
-			    					<strong>Amaury</strong>&nbsp;&nbsp;
-			    				</p>
-			    				<div class="muted pull-right">6 février 2013 à 18:30</div>
-			    				<p></p>
-			    				<p>
-			    					What's up?
-	                  			</p>
-
-	                  			<hr style="margin-top: 5px; margin-bottom: 5px;">
-
-								<p>
-									<strong>Emma</strong>
-								</p>
-								<div class="muted pull-right">6 février 2013 à 18:30</div>
-								<p></p>
-								<p>
-									What about no?
-								</p>
-								<p>
-									Bien et toi ?
-								</p>
-
-								<hr style="margin-top: 5px; margin-bottom: 5px;">
-								<p>
-									<strong>Amaury</strong>
-								</p>
-								<div class="muted pull-right">6 février 2013 à 18:30</div>
-								<p></p>
-								<p>
-									Le code source : <br />
-									<pre>
-	&lt;div class="tabbable tabs-left"&gt;
-		&lt;ul class="nav nav-tabs"&gt;
-			...
-		&lt;/ul&gt;
-		&lt;div class="tab-content"&gt;
-			...
-		&lt;/div&gt;
-	&lt;/div&gt;
-									</pre>
-								</p>
-
-								<p>
-			    					<strong>Amaury</strong>&nbsp;&nbsp;
-			    				</p>
-			    				<div class="muted pull-right">6 février 2013 à 18:30</div>
-			    				<p></p>
-			    				<p>
-			    					What's up?
-	                  			</p>
-
-	                  			<hr style="margin-top: 5px; margin-bottom: 5px;">
-
-								<p>
-									<strong>Emma</strong>
-								</p>
-								<div class="muted pull-right">6 février 2013 à 18:30</div>
-								<p></p>
-								<p>
-									What about no?
-								</p>
-								<p>
-									Bien et toi ?
-								</p>
-
-								<hr style="margin-top: 5px; margin-bottom: 5px;">
-								<p>
-									<strong>Amaury</strong>
-								</p>
-								<div class="muted pull-right">6 février 2013 à 18:30</div>
-								<p></p>
-								<p>
-									Le code source : <br />
-									<pre>
-	&lt;div class="tabbable tabs-left"&gt;
-		&lt;ul class="nav nav-tabs"&gt;
-			...
-		&lt;/ul&gt;
-		&lt;div class="tab-content"&gt;
-			...
-		&lt;/div&gt;
-	&lt;/div&gt;
-									</pre>
-								</p>
-
-								<p>
-			    					<strong>Amaury</strong>&nbsp;&nbsp;
-			    				</p>
-			    				<div class="muted pull-right">6 février 2013 à 18:30</div>
-			    				<p></p>
-			    				<p>
-			    					What's up?
-	                  			</p>
-
-	                  			<hr style="margin-top: 5px; margin-bottom: 5px;">
-
-								<p>
-									<strong>Emma</strong>
-								</p>
-								<div class="muted pull-right">6 février 2013 à 18:30</div>
-								<p></p>
-								<p>
-									What about no?
-								</p>
-								<p>
-									Bien et toi ?
-								</p>
-
-								<hr style="margin-top: 5px; margin-bottom: 5px;">
-								<p>
-									<strong>Amaury</strong>
-								</p>
-								<div class="muted pull-right">6 février 2013 à 18:30</div>
-								<p></p>
-								<p>
-									Le code source : <br />
-									<pre>
-	&lt;div class="tabbable tabs-left"&gt;
-		&lt;ul class="nav nav-tabs"&gt;
-			...
-		&lt;/ul&gt;
-		&lt;div class="tab-content"&gt;
-			...
-		&lt;/div&gt;
-	&lt;/div&gt;
-									</pre>
-								</p>
-								<p></p>
-							</div>
+		    				<div class="wrapper"></div>
 		    			</div>
 			    		<div id="post">
 			    			<form>
-							    <textarea name="" id="messageText" class="span6" rows="1" placeholder="Envoyer un message..." style="resize: none;"></textarea>
+							    <textarea name="" id="messageText" class="span6" rows="1" disabled="disabled" placeholder="Envoyer un message..." style="resize: none;"></textarea>
 							    <div>
 							    	<div class="pull-right">
 							    		<button type="button" class="btn btn-primary" id="send">Envoyer</button>
@@ -249,15 +121,78 @@
 			    	</div>
 			    </div>
 			    <div class="span3">
-			    	<div class="well sidebar-nav">
+			    	<div class="well sidebar-nav" style="display: none;">
 						<ul class="nav nav-list">
 							<li class="nav-header">Utilisateurs connectés</li>
-							<li class="active"><a href="#">Amaury</a></li>
 						</ul>
 					</div><!--/.well -->
 			    </div>
 		    </div>
 	    </div> <!-- /container -->
+
+		<!-- Data storage in divs -->
+		<div style="display: none;">
+			
+			<div id="roomsList">
+				<div class="alert alert-info" id="noticeNotConnected">
+					Vous n'êtes connecté(e) à aucun salon.<br />
+					<small>
+						Choisissez ci-dessous un salon à joindre. 
+						Veuillez noter que certains salons sont protégés, et d'autres invisibles.<br />
+						Pour vous connecter à un salon invisible, saisissez son nom ci-dessous.
+					</small>
+				</div>
+				<div class="pull-right">
+					<button class="newRoom btn btn-primary">Créer un salon</button>
+				</div>
+				
+				<div class="input-append">
+					<input type="text" id="secretRoom" class="input-xlarge" placeholder="Joindre un salon: son nom ?" />
+					<button class="btn btn-primary">Joindre</button>
+				</div>
+				
+				<h3>Liste des salons</h3>
+				    <table class="table table-striped">
+						<thead>
+							<tr>
+								<th>#</th>
+								<th>Nom du salon</th>
+								<th>Connectés</th>
+								<th>Joindre</th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php
+								if($rooms == array()) {
+									?>
+
+									<tr>
+										<td colspan="4" style="text-align: center; font-style: italic;">Aucun salon n'existe. Créez-en un à l'aide du bouton.</td>
+									</tr>
+
+									<?php
+								}
+								else {
+									foreach($rooms AS $room) {
+										?>
+
+										<tr>
+											<td><?php echo $room['id']; ?></td>
+											<td><?php echo $room['name']; ?></td>
+											<td></td>
+											<td><button class="btn btn-link join" data-room-id="<?php echo $room['id']; ?>">Joindre</button></td>
+										</tr>
+
+										<?php
+									}
+								}
+							?>
+						</tbody>	
+					</table>
+			</div>
+
+		</div>
+
 	</div>
 
     <!-- Le javascript
@@ -278,13 +213,23 @@
 					},
 					$messageText = $('#messageText'),
 					$messages    = $('#content .wrapper'),
-					$content     = $('#content');
+					$content     = $('#content'),
+					$roomsList   = $('#roomsList'),
 
+					data;
 
 				// Set the height of the chatbox
-				$content.css('height', (document.body.clientHeight - 250) + 'px')
-						.css('max-height', (document.body.clientHeight - 250) + 'px')
-						.scrollTop(1000);
+				var updateContentHeight = function() {
+					$content.css('height', (document.body.clientHeight - 250) + 'px')
+							.css('max-height', (document.body.clientHeight - 250) + 'px')
+							.scrollTop(1000);
+				};
+				$(window).resize(updateContentHeight);
+				updateContentHeight();
+
+				// Show list of rooms on startup.
+				$messages.html($roomsList.html());
+
 
 
 				var generateHTMLMessage = function(message, author, date, preciseDate) {
@@ -303,7 +248,7 @@
 						return '<p>' + message + '</p>';
 					}
 
-				}
+				};
 
 				// Send a message
 				var sendMessage = function() {
@@ -316,7 +261,7 @@
 					lastMessageAuthor = me.name;
 
 					$messageText.val('').focus();
-				}
+				};
 
 				$('#messageText').keydown(function (e) {
 					if ((e.keyCode === 10 || e.keyCode == 13) && e.ctrlKey) { 
