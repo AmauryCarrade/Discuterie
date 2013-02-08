@@ -166,7 +166,7 @@
 								if($rooms == array()) {
 									?>
 
-									<tr>
+									<tr class="noRooms">
 										<td colspan="4" style="text-align: center; font-style: italic;">Aucun salon n'existe. Créez-en un à l'aide du bouton.</td>
 									</tr>
 
