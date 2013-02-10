@@ -117,7 +117,7 @@
 					<div id="notifications"></div>
 					<p style="text-align: center;">
 						<small class="muted">
-							Ce logiciel est actuellement en bêta.<br />
+							Ce logiciel est actuellement en version alpha.<br />
 							Suggestion&nbsp;? Bug&nbsp;? <a href="https://github.com/Bubbendorf/Discuterie/issues">Dites-le !</a> :)
 						</small>
 					</p>
@@ -154,7 +154,7 @@
 		    			</div>
 			    		<div id="post">
 			    			<form>
-							    <textarea name="" id="messageText" class="span6" rows="1" disabled="disabled" placeholder="Envoyer un message..." style="resize: none;"></textarea>
+							    <textarea name="" id="messageText" class="span6" rows="1" disabled="disabled" placeholder="Envoyer un message..." style="resize: vertical;"></textarea>
 							    <div>
 							    	<div class="pull-right">
 							    		<button type="button" class="btn btn-primary" id="send">Envoyer</button>
@@ -339,6 +339,7 @@
 
 				// Texts
 				texts['errorProtectedRoom'] = 'Ce salon est protégé et vous n\'avez pas le droit d\'y accéder.';
+				texts['errorUnknowRoom'] = 'Ce salon n\'existe pas. Vous pouvez le créer en cliquant sur le bouton à droite du champ.';
 				texts['unknowError'] = 'Une erreur s\'est produite. Veuillez réessayer.';
 
 				// Generated list of avaliable (public and protected) rooms.
@@ -451,7 +452,7 @@
 					
 					message = nl2br(message);
 					if(rooms[currentRoom]['lastMessageAuthor'] != author) {
-						return '<p><strong>' + author + '</strong></p><div class="muted pull-right" title="' + preciseDate + '">' + date + '</div><p></p><p>' + message + '</p>';
+						return '<div class="muted pull-right" title="' + preciseDate + '">' + date + '</div><p><strong>' + author + '</strong></p><p></p><p>' + message + '</p>';
 					}
 					else {
 						return '<p>' + message + '</p>';
@@ -518,11 +519,18 @@
 								$('.formSecretRoom').removeClass('error');
 								joinRoom(room.id, roomName);
 							}
-							else {
+							else if (room.error != 'unknow' && room.type != 'public' && allowedRooms[room.id] == undefined) {
 								$('.formSecretRoom').addClass('error');
 								setTimeout(function() { $('.formSecretRoom').removeClass('error'); }, 4000);
 								$('.secretRoom').select();
 								notify(roomName, texts['errorProtectedRoom'], 'error');
+								return;
+							}
+							else {
+								$('.formSecretRoom').addClass('error');
+								setTimeout(function() { $('.formSecretRoom').removeClass('error'); }, 4000);
+								$('.secretRoom').select();
+								notify(roomName, texts['errorUnknowRoom'], 'error');
 								return;
 							}
 						}
@@ -630,6 +638,7 @@
 					$(this).addClass('active');
 					$roomName.text('Tous les salons');
 					$frameListConnectedUsers.hide();
+					$iconProtectedRoom.hide();
 				});
 
 
