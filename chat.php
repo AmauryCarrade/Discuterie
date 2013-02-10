@@ -39,7 +39,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Disussion instantanée</title>
+    <title>La discuterie</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -107,6 +107,13 @@
 							<li class="newRoom"><a href="#">Nouveau salon</a></li>
 						</ul>
 					</div><!--/.well -->
+					<div id="notifications"></div>
+					<p>
+						<small class="muted">
+							Ce logiciel est actuellement en bêta.<br />
+							Suggestion&nbsp;? Bug&nbsp;? <a href="https://github.com/Bubbendorf/Discuterie/issues">Dites-le !</a> :)
+						</small>
+					</p>
 				</div>
 
 			    <div class="span6">
@@ -419,10 +426,13 @@
 				var generateHTMLMessage = function(message, author, date, preciseDate) {
 					if(date == undefined) {
 						var months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
-						dateOb = new Date();
-						day = dateOb.getDay() < 10 ? '0' + dateOb.getDay() : dateOb.getDay();
-						date = day + ' ' + months[dateOb.getMonth()] + ' ' + dateOb.getFullYear() + ' à ' + dateOb.getHours() + ':' + dateOb.getMinutes();
-						preciseDate = date + ':' + dateOb.getSeconds();
+						var dateOb = new Date();
+						var day = dateOb.getDate() < 10 ? '0' + dateOb.getDate() : dateOb.getDate();
+						var hours = dateOb.getHours() < 10 ? '0' + dateOb.getHours() : dateOb.getHours();
+						var minutes = dateOb.getMinutes() < 10 ? '0' + dateOb.getMinutes() : dateOb.getMinutes();
+						var seconds = dateOb.getSeconds() < 10 ? '0' + dateOb.getSeconds() : dateOb.getSeconds();
+						date = day + ' ' + months[dateOb.getMonth()] + ' ' + dateOb.getFullYear() + ' à ' + hours + ':' + minutes;
+						preciseDate = date + ':' + seconds;
 					}
 					
 					message = nl2br(message);
@@ -461,7 +471,8 @@
 					source: typeaheadRooms,
 					items: 8
 				});
-				$('.formSecretRoom').live('submit', function() {
+				$('.formSecretRoom').live('submit', function(e) {
+					e.preventDefault();
 					var roomName = $('.secretRoom').val();
 					$.ajax({
 						dataType: 'json',
@@ -481,10 +492,12 @@
 								joinRoom(room.id, roomName);
 							}
 						}
-					})
-				})
+					});
+				});
 
 				var switchRoom = function(roomId) {
+					if(currentRoom == roomId) return;
+
 					$messageText.removeAttr('disabled');
 					$roomName.text(rooms[roomId]['name']);
 					$messages.html($('#data-room-' + roomId).html());
@@ -494,6 +507,8 @@
 					$('#goToRoom' + roomId).addClass('active');
 
 					reloadUIConnectedUsers(rooms[roomId]['connected']);
+
+					$messageText.focus();
 				};
 
 				var joinRoom = function(roomId, roomName) {
@@ -518,6 +533,8 @@
 
 						$messages.html('');
 						appendMessage(generateUnnamedHTMLMessage('Vous avez rejoint le salon.'), currentRoom);
+
+						$messageText.focus();
 
 						// Under the hole
 						$.ajax({
