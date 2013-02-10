@@ -1,2 +1,7 @@
 
 *.odb
+/misc/README_PerfectScrollbar.md
+/misc/css/perfect-scrollbar.css
+/misc/css/perfect-scrollbar.min.css
+/misc/js/perfect-scrollbar.js
+/misc/js/perfect-scrollbar.min.js

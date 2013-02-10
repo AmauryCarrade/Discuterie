@@ -45,7 +45,7 @@
     <meta name="author" content="">
 
     <!-- Le styles -->
-    <link href="misc/css/bootstrap.css" rel="stylesheet">
+    <link href="misc/css/bootstrap.min.css" rel="stylesheet">
     <style>
       body {
         
@@ -86,6 +86,10 @@
       }
       #iconProtectedRoom span {
       	margin-top: 13px;
+      }
+
+      .message-date {
+      	margin-left: 8px;
       }
     </style>
 
@@ -193,7 +197,7 @@
 				
 				<div class="input-append">
 					<form class="formSecretRoom control-group">
-						<input type="text" class="secretRoom" class="input-xlarge" placeholder="Joindre un salon: son nom ?" autocomplete="off" />
+						<input type="text" class="secretRoom" class="input-xlarge" placeholder="Joindre un salon : son nom ?" autocomplete="off" />
 						<button class="btn btn-primary">Joindre</button>
 					</form>
 				</div>
@@ -290,6 +294,10 @@
 				</p>
 			</div>
 			<div class="modal-footer">
+				<div class="pull-left muted" style="font-size: xx-small; text-align: left;">
+					Veuillez actualiser la page après création du/des salons.<br />
+					Ce bug sera corrigé, <span title="MERCI, Captain Obvious...">mais ne l'est pas encore</span>.
+				</div>
 				<a href="#" class="btn" data-dismiss="modal">Annuler</a>
 				<a href="#" class="btn btn-primary" id="newRoomCreate" data-loading-text="Création...">Créer le salon</a>
 			</div>
@@ -302,7 +310,7 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="http://code.jquery.com/jquery-migrate-1.1.0.min.js"></script>
-    <script src="misc/js/bootstrap.js"></script>
+    <script src="misc/js/bootstrap.min.js"></script>
     <!--<script src="misc/js/chat.js"></script>-->
     <script type="text/javascript">
     	(function($) {
@@ -349,9 +357,12 @@
 					}
 				?>
 				<?php
+					$i = 0;
 					foreach($rooms AS $room) {
-						echo 'typeaheadRooms[' . ($room['room_id'] - 1) . '] = \'' . $room['room_name'] . '\'' . "\n";
+						echo 'typeaheadRooms[' . $i . '] = \'' . $room['room_name'] . '\'' . "\n";
+						$i++;
 					}
+					unset($i);
 				?>
 				<?php
 					foreach($allowedRooms AS $roomId) {
@@ -413,7 +424,7 @@
 								}
 								$('#modalNewRoom').modal('hide');
 								var name = $name.val().replace(' ', '');
-								var row = '<tr><td>' + id + '</td><td>' + name + '</td><td>0</td><td><a href="#" class="join" data-room-id="' + id + ' data-room-name="' + name + '">Joindre</a></td><td></td></tr>';
+								var row = '<tr><td>' + id + '</td><td>' + name + '</td><td></td><td><a href="#" class="join" data-room-id="' + id + ' data-room-name="' + name + '">Joindre</a></td><td></td></tr>';
 								if($('#tableRooms tbody tr:first').hasClass('noRooms')) {
 									$('#tableRooms tbody').html(row);
 								}
@@ -438,7 +449,7 @@
 
 
 
-				var generateHTMLMessage = function(message, author, date, preciseDate) {
+				var generateHTMLMessage = function(message, author, date, preciseDate, time) {
 					if(date == undefined) {
 						var months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 						var dateOb = new Date();
@@ -448,21 +459,40 @@
 						var seconds = dateOb.getSeconds() < 10 ? '0' + dateOb.getSeconds() : dateOb.getSeconds();
 						date = day + ' ' + months[dateOb.getMonth()] + ' ' + dateOb.getFullYear() + ' à ' + hours + ':' + minutes;
 						preciseDate = date + ':' + seconds;
+						time = 'à ' + hours + ':' + minutes;
 					}
 					
 					message = nl2br(message);
 					if(rooms[currentRoom]['lastMessageAuthor'] != author) {
-						return '<div class="muted pull-right" title="' + preciseDate + '">' + date + '</div><p><strong>' + author + '</strong></p><p></p><p>' + message + '</p>';
+						return '<p><strong>' + author + '</strong></p><p></p><div class="muted pull-right message-date" title="' + preciseDate + '"><small>' + date + '</small></div><p>' + message + '</p>';
 					}
 					else {
-						return '<p>' + message + '</p>';
+						return '<div class="muted pull-right message-date" title="' + preciseDate + '"><small>' + time + '</small></div><p>' + message + '</p>';
 					}
 
 				};
 
-				var generateUnnamedHTMLMessage = function(message) {
+				var generateUnnamedHTMLMessage = function(message, enableDate, date, preciseDate, time) {
+					if(enableDate != undefined) {
+						if(date == undefined) {
+							// DOUBLON -> exporter
+							var months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+							var dateOb = new Date();
+							var day = dateOb.getDate() < 10 ? '0' + dateOb.getDate() : dateOb.getDate();
+							var hours = dateOb.getHours() < 10 ? '0' + dateOb.getHours() : dateOb.getHours();
+							var minutes = dateOb.getMinutes() < 10 ? '0' + dateOb.getMinutes() : dateOb.getMinutes();
+							var seconds = dateOb.getSeconds() < 10 ? '0' + dateOb.getSeconds() : dateOb.getSeconds();
+							date = day + ' ' + months[dateOb.getMonth()] + ' ' + dateOb.getFullYear() + ' à ' + hours + ':' + minutes;
+							preciseDate = date + ':' + seconds;
+						}
+					}
 					message = nl2br(message);
-					return '<div class="well well-small">' + message + '</div>';
+					if(enableDate != undefined && enableDate == true) {
+						return '<div class="well well-small"><div class="muted pull-right message-date" title="' + preciseDate + '"><small>' + date + '</small></div>' + message + '</div>';
+					}
+					else {
+						return '<div class="well well-small">' + message + '</div>';
+					}
 				};
 
 
@@ -484,7 +514,7 @@
 					var html  = '<div class="alert ' + classType + '">';
 					    html += '<button type="button" class="close" data-dismiss="alert">&times;</button>';
     					html += '<strong>' + title + '</strong><br />' + message + '</div>';
-    				$notifications.append(html);
+    				$notifications.prepend(html);
 				};
 
 
@@ -647,7 +677,7 @@
 					var regexMe = /^\/me/i;
 					var htmlMessage;
 					if(regexMe.test($messageText.val())) {
-						htmlMessage = generateUnnamedHTMLMessage('<strong>' + me.name + '</strong>' + $messageText.val().replace('/me ', ' '));
+						htmlMessage = generateUnnamedHTMLMessage('<strong>' + me.name + '</strong>' + $messageText.val().replace('/me ', ' '), true); // true: show date
 						rooms[currentRoom]['lastMessageAuthor'] = null;
 					}
 					else {
