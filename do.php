@@ -13,7 +13,7 @@
 	}
 
 	switch($_POST['do']) {
-		case 'newRoom':
+		case 'newRoom': // Args: name, type
 			$_POST['name'] = str_replace(' ', '', $_POST['name']);
 			$_POST['name'] = str_replace('\'', '', $_POST['name']);
 
@@ -40,7 +40,21 @@
 			}
 			break;
 
-		case 'join':
+		case 'join': // Args: room (id)
+
+			// Check auth
+			$query = $pdo->prepare('SELECT type FROM rooms WHERE id = ?');
+			$query->execute(array($_POST['room'])); 
+			$type = $query->fetchAll();
+			if($type[0]['type'] != 'public') {
+				$query = $pdo->prepare('SELECT userId FROM usersAllowed WHERE roomId = ? AND userId = ?');
+				$query->execute(array($_POST['room'], $_SESSION['user']['id'])); 
+				if($query->fetchAll() == array()) {
+					echo json_encode(array('error' => 'forbidden', 'data' => array($query->fetchAll(), $_POST['room'], $_SESSION['user']['id'])));
+					exit;
+				}
+			}
+
 			$query = $pdo->prepare('SELECT userId FROM usersRooms WHERE roomId = ? AND userId = ?');
 			$query->execute(array($_POST['room'], $_SESSION['user']['id']));
 
@@ -57,10 +71,12 @@
 									WHERE usersRooms.roomId = ?');
 			$query->execute(array($_POST['room']));
 
-			echo json_encode($query->fetchAll());
+			echo json_encode(array('type'	   => $type[0]['type'], 
+								   'error'	   => 'done',
+								   'connected' => $query->fetchAll()));
 			break;
 
-		case 'dataFromRoomName':
+		case 'dataFromRoomName': // Args: roomName
 			$ids = $pdo->prepare('SELECT id, type FROM rooms WHERE name = ?');
 			$ids->execute(array($_POST['roomName']));
 			$ids = $ids->fetchAll();

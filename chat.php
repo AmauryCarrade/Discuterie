@@ -80,6 +80,13 @@
       #content .wrapper {
       	padding: 5px;
       }
+
+      #iconProtectedRoom {
+      	display: none;
+      }
+      #iconProtectedRoom span {
+      	margin-top: 13px;
+      }
     </style>
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
@@ -108,7 +115,7 @@
 						</ul>
 					</div><!--/.well -->
 					<div id="notifications"></div>
-					<p>
+					<p style="text-align: center;">
 						<small class="muted">
 							Ce logiciel est actuellement en bêta.<br />
 							Suggestion&nbsp;? Bug&nbsp;? <a href="https://github.com/Bubbendorf/Discuterie/issues">Dites-le !</a> :)
@@ -139,7 +146,7 @@
 										</a>
 									</div>
 			    				</div>
-		    					<span id="roomName">Tous les salons</span>
+		    					<span id="roomName">Tous les salons</span>&nbsp;<span id="iconProtectedRoom"><span class="icon-lock"></span></span>
 		    				</h2>
 		    			</div>
 		    			<div id="content">
@@ -317,6 +324,7 @@
 					$messages      = $('#content .wrapper'),
 					$content       = $('#content'),
 					$roomsList     = $('#roomsList'),
+					$notifications = $('#notifications'),
 
 					authKey        = '<?php echo $token; ?>',
 
@@ -325,7 +333,13 @@
 					allowedRooms   = new Array(),
 					typeaheadRooms = new Array(),
 					$data          = $('#dataRooms'),
-					currentRoom    = null;
+					currentRoom    = null,
+
+					texts          = new Array();
+
+				// Texts
+				texts['errorProtectedRoom'] = 'Ce salon est protégé et vous n\'avez pas le droit d\'y accéder.';
+				texts['unknowError'] = 'Une erreur s\'est produite. Veuillez réessayer.';
 
 				// Generated list of avaliable (public and protected) rooms.
 				<?php
@@ -460,13 +474,28 @@
 				};
 
 
+				var notify = function(title, message, type) {
+					var classType = null;
+					if(type = 'error') 			classType = 'alert-error';
+					else if(type = 'success') 	classType = 'alert-success';
+					else if(type = 'info') 		classType = 'alert-info';
+
+					var html  = '<div class="alert ' + classType + '">';
+					    html += '<button type="button" class="close" data-dismiss="alert">&times;</button>';
+    					html += '<strong>' + title + '</strong><br />' + message + '</div>';
+    				$notifications.append(html);
+				};
+
 
 				
 				// Join & switch room
 				var $menuRoomsList = $('#menuRoomsList'),
 					$roomName  = $('#roomName'),
 					$listConnectedUsers = $('#listConnectedUsers'), 
-					$frameListConnectedUsers = $('#frameListConnectedUsers');
+					$frameListConnectedUsers = $('#frameListConnectedUsers'),
+
+					$iconProtectedRoom = $('#iconProtectedRoom');
+
 				$('.secretRoom').typeahead({
 					source: typeaheadRooms,
 					items: 8
@@ -474,6 +503,8 @@
 				$('.formSecretRoom').live('submit', function(e) {
 					e.preventDefault();
 					var roomName = $('.secretRoom').val();
+					if(roomName == '') return;
+
 					$.ajax({
 						dataType: 'json',
 						data: {
@@ -482,14 +513,17 @@
 							roomName: roomName
 						},
 						success: function(room) {
-							if(room.error == 'unknow') {
-								$('.formSecretRoom').addClass('error');
-								return;
-							}
-							if(room.type == 'public' || allowedRooms[room.id] != undefined) {
+							if(room.error != 'unknow' && (room.type == 'public' || allowedRooms[room.id] != undefined)) {
 								$('.secretRoom').val('');
 								$('.formSecretRoom').removeClass('error');
 								joinRoom(room.id, roomName);
+							}
+							else {
+								$('.formSecretRoom').addClass('error');
+								setTimeout(function() { $('.formSecretRoom').removeClass('error'); }, 4000);
+								$('.secretRoom').select();
+								notify(roomName, texts['errorProtectedRoom'], 'error');
+								return;
 							}
 						}
 					});
@@ -506,6 +540,9 @@
 					$('#menuRoomsList li, .goToListRooms').removeClass('active');
 					$('#goToRoom' + roomId).addClass('active');
 
+					if(rooms[roomId]['type'] != 'public') $iconProtectedRoom.show();
+					else 								  $iconProtectedRoom.hide();
+
 					reloadUIConnectedUsers(rooms[roomId]['connected']);
 
 					$messageText.focus();
@@ -517,26 +554,6 @@
 					$('.noticeNotConnected').hide();
 
 					if(rooms[roomId] == undefined) {
-						var html = '<li class="active" data-id="' + roomId + '" id="goToRoom' + roomId + '"><a href="#">' + roomName + '</a></li>';
-						$menuRoomsList.append(html);
-
-						$messageText.removeAttr('disabled');
-						$roomName.text(roomName);
-
-						currentRoom = roomId;
-
-						rooms[currentRoom] = new Array();
-						rooms[currentRoom]['name'] = roomName;
-						rooms[currentRoom]['lastMessageAuthor'] = null;
-
-						$data.append('<div id="data-room-' + currentRoom + '"></div>');
-
-						$messages.html('');
-						appendMessage(generateUnnamedHTMLMessage('Vous avez rejoint le salon.'), currentRoom);
-
-						$messageText.focus();
-
-						// Under the hole
 						$.ajax({
 							data: {
 								do: 'join',
@@ -544,9 +561,42 @@
 								room: roomId
 							},
 							dataType: 'json',
-							success: function(connected) {
-								rooms[currentRoom]['connected'] = connected;
-								reloadUIConnectedUsers(connected);
+							success: function(roomData) {
+								if(roomData['error'] == 'done') {
+									var html = '<li class="active" data-id="' + roomId + '" id="goToRoom' + roomId + '"><a href="#">' + roomName + '</a></li>';
+									$menuRoomsList.append(html);
+
+									$messageText.removeAttr('disabled');
+									$roomName.text(roomName);
+
+									currentRoom = roomId;
+
+									rooms[currentRoom] = new Array();
+									rooms[currentRoom]['name'] = roomName;
+									rooms[currentRoom]['type'] = roomData['type'];
+									rooms[currentRoom]['lastMessageAuthor'] = null;
+
+									console.log(rooms, currentRoom);
+
+									if(rooms[currentRoom]['type'] != 'public') $iconProtectedRoom.show();
+									else 									   $iconProtectedRoom.hide();
+
+									$data.append('<div id="data-room-' + currentRoom + '"></div>');
+
+									$messages.html('');
+									appendMessage(generateUnnamedHTMLMessage('Vous avez rejoint le salon.'), currentRoom);
+
+									$messageText.focus();
+
+									rooms[currentRoom]['connected'] = roomData['connected'];
+									reloadUIConnectedUsers(roomData['connected']);
+								}
+								else if(roomData['error'] == 'forbidden') {
+									notify(roomName, texts['errorProtectedRoom'], 'error');
+								}
+								else {
+									notify(roomName, texts['unknowError'], 'error');
+								}
 							}
 						});
 					}
