@@ -19,7 +19,8 @@
 	$allowedRoomsQ = $allowedRoomsQ->fetchAll();
 	$allowedRooms = array();
 	foreach ($allowedRoomsQ as $allowedRoom) {
-		$allowedRooms[] = $allowedRoom['roomId'];
+		$allowedRooms[] 			= $allowedRoom['roomId'];
+		$_SESSION['allowedRooms'][] = $allowedRoom['roomId'];
 	}
 
 	$bannedRoomsQ = $pdo->prepare('SELECT roomId FROM usersBanned WHERE userId = ?');
@@ -27,12 +28,14 @@
 	$bannedRoomsQ = $bannedRoomsQ->fetchAll();
 	$bannedRooms = array();
 	foreach ($bannedRoomsQ as $bannedRoom) {
-		$bannedRooms[] = $bannedRoom['roomId'];
+		$bannedRooms[]			   = $bannedRoom['roomId'];
+		$_SESSION['bannedRooms'][] = $bannedRoom['roomId'];
 	}
 
+
 	$random = mt_rand(0, 123458) .  microtime();
-	$_SESSION['auth'] = sha1(SALT . sha1(SALT . $random));
 	$token = sha1(SALT . $random);
+	$_SESSION['auth'] = sha1(SALT . $token);
 ?>
 
 <!DOCTYPE html>
@@ -120,7 +123,7 @@
 							    <textarea name="" id="messageText" class="span6" rows="1" disabled="disabled" placeholder="Envoyer un message..." style="resize: vertical;"></textarea>
 							    <div>
 							    	<div class="pull-right">
-							    		<button type="button" class="btn btn-primary" id="send">Envoyer</button>
+							    		<span id="loaderButton" class="hide"><img src="misc/img/loader-small.gif" alt="Envoi..." title="Envoi du message en cours..." /></span><button type="button" class="btn btn-primary" id="send">Envoyer</button>
 							    	</div>
 							    	<p class="muted"><small>Envoyez le message en tapant <code>Ctrl</code> + <code>Entrée</code>, ou avec le bouton.</small></p>
 							    </div>
@@ -282,6 +285,8 @@
 			$roomsList     = $('#roomsList'),
 			$notifications = $('#notifications'),
 
+			$loaderButton  = $('#loaderButton');
+
 			authKey        = '<?php echo $token; ?>',
 
 			rooms          = new Array(),
@@ -291,12 +296,18 @@
 			$data          = $('#dataRooms'),
 			currentRoom    = null,
 
+			usersNames     = new Array(),
+
 			texts          = new Array();
 
 		// Texts
 		texts['errorProtectedRoom'] = 'Ce salon est protégé et vous n\'avez pas le droit d\'y accéder.';
 		texts['errorUnknowRoom'] = 'Ce salon n\'existe pas. Vous pouvez le créer en cliquant sur le bouton à droite du champ.';
 		texts['unknowError'] = 'Une erreur s\'est produite. Veuillez réessayer.';
+
+		texts['postErrorTitle'] = 'Erreur d\'envoi';
+		texts['postUnknowRoom'] = 'Vous tentez de poster dans le salon {room}, qui n\'existe pas ou plus.';
+		texts['postForbidden'] = 'Vous n\'avez pas le droit de poster dans le salon {room}.';
 
 		// Generated list of avaliable (public and protected) rooms.
 		<?php
@@ -321,5 +332,6 @@
     <script src="misc/js/utilities.js"></script>
     <script src="misc/js/rooms.js"></script>
     <script src="misc/js/messages.js"></script>
+    <script src="misc/js/update.js"></script>
   </body>
 </html>

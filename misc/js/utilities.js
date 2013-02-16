@@ -24,18 +24,53 @@ var nl2br = function(str) {
 	return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1' + '<br ' + '/>' + '$2');
 };
 
-var generateHTMLMessage = function(message, author, date, preciseDate, time) {
-	if(date == undefined) {
-		var months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
-		var dateOb = new Date();
-		var day = dateOb.getDate() < 10 ? '0' + dateOb.getDate() : dateOb.getDate();
-		var hours = dateOb.getHours() < 10 ? '0' + dateOb.getHours() : dateOb.getHours();
-		var minutes = dateOb.getMinutes() < 10 ? '0' + dateOb.getMinutes() : dateOb.getMinutes();
-		var seconds = dateOb.getSeconds() < 10 ? '0' + dateOb.getSeconds() : dateOb.getSeconds();
-		date = day + ' ' + months[dateOb.getMonth()] + ' ' + dateOb.getFullYear() + ' à ' + hours + ':' + minutes;
-		preciseDate = date + ':' + seconds;
-		time = 'à ' + hours + ':' + minutes;
+var t = function(text, variables) {
+	var translated = texts[text];
+
+	if(variables != undefined) {
+		var regexp;
+		for (varName in variables) {
+			regexp = new RegExp('{' + varName + '}', 'g');
+			translated = translated.replace(regexp, variables[varName]);
+		}
 	}
+
+	return translated;
+};
+
+var getUsername = function(id) {
+	if(usersNames[id] == undefined) {
+		$.ajax({
+			data: {
+				do: 'getUsername',
+				auth: authKey,
+				userId: id
+			},
+			success : function(username) {
+				usersNames[id] == username;
+			}
+		});
+	}
+
+	console.log(usersNames);
+
+	return usersNames[id];
+}
+
+var generateHTMLMessage = function(message, author, dateOb) {
+	var date, preciseDate, time;
+	if(dateOb == undefined) {
+		dateOb = new Date();
+	}
+
+	var months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+	var day = dateOb.getDate() < 10 ? '0' + dateOb.getDate() : dateOb.getDate();
+	var hours = dateOb.getHours() < 10 ? '0' + dateOb.getHours() : dateOb.getHours();
+	var minutes = dateOb.getMinutes() < 10 ? '0' + dateOb.getMinutes() : dateOb.getMinutes();
+	var seconds = dateOb.getSeconds() < 10 ? '0' + dateOb.getSeconds() : dateOb.getSeconds();
+	date = day + ' ' + months[dateOb.getMonth()] + ' ' + dateOb.getFullYear() + ' à ' + hours + ':' + minutes;
+	preciseDate = date + ':' + seconds;
+	time = 'à ' + hours + ':' + minutes;
 	
 	message = nl2br(message);
 	if(rooms[currentRoom]['lastMessageAuthor'] != author) {
@@ -47,20 +82,22 @@ var generateHTMLMessage = function(message, author, date, preciseDate, time) {
 
 };
 
-var generateUnnamedHTMLMessage = function(message, enableDate, date, preciseDate, time) {
+var generateUnnamedHTMLMessage = function(message, enableDate, dateOb) {
 	if(enableDate != undefined) {
-		if(date == undefined) {
-			// DOUBLON -> exporter
-			var months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
-			var dateOb = new Date();
-			var day = dateOb.getDate() < 10 ? '0' + dateOb.getDate() : dateOb.getDate();
-			var hours = dateOb.getHours() < 10 ? '0' + dateOb.getHours() : dateOb.getHours();
-			var minutes = dateOb.getMinutes() < 10 ? '0' + dateOb.getMinutes() : dateOb.getMinutes();
-			var seconds = dateOb.getSeconds() < 10 ? '0' + dateOb.getSeconds() : dateOb.getSeconds();
-			date = day + ' ' + months[dateOb.getMonth()] + ' ' + dateOb.getFullYear() + ' à ' + hours + ':' + minutes;
-			preciseDate = date + ':' + seconds;
+		var date, preciseDate;
+		if(dateOb == undefined) {
+			dateOb = new Date();
 		}
+
+		var months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+		var day = dateOb.getDate() < 10 ? '0' + dateOb.getDate() : dateOb.getDate();
+		var hours = dateOb.getHours() < 10 ? '0' + dateOb.getHours() : dateOb.getHours();
+		var minutes = dateOb.getMinutes() < 10 ? '0' + dateOb.getMinutes() : dateOb.getMinutes();
+		var seconds = dateOb.getSeconds() < 10 ? '0' + dateOb.getSeconds() : dateOb.getSeconds();
+		date = day + ' ' + months[dateOb.getMonth()] + ' ' + dateOb.getFullYear() + ' à ' + hours + ':' + minutes;
+		preciseDate = date + ':' + seconds;
 	}
+
 	message = nl2br(message);
 	if(enableDate != undefined && enableDate == true) {
 		return '<div class="well well-small"><div class="muted pull-right message-date" title="' + preciseDate + '"><small>' + date + '</small></div>' + message + '</div>';
@@ -69,6 +106,21 @@ var generateUnnamedHTMLMessage = function(message, enableDate, date, preciseDate
 		return '<div class="well well-small">' + message + '</div>';
 	}
 };
+
+var generateMessage = function(message, author, dateOb) {
+	var regexMe = /^\/me/i;
+	var htmlMessage;
+	if(regexMe.test(message)) {
+		htmlMessage = generateUnnamedHTMLMessage('<strong>' + author + '</strong>' + message.replace('/me ', ' '), true, dateOb); // true: show date
+		rooms[currentRoom]['lastMessageAuthor'] = null;
+	}
+	else {
+		htmlMessage = generateHTMLMessage(message, author, dateOb);
+		rooms[currentRoom]['lastMessageAuthor'] = author;
+	}
+
+	return htmlMessage;
+}
 
 
 // Duplicate the insertion of the message in the hidden data div.

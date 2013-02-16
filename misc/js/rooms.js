@@ -169,10 +169,10 @@ $(document).ready(function() {
 						reloadUIConnectedUsers(roomData['connected']);
 					}
 					else if(roomData['error'] == 'forbidden') {
-						notify(roomName, texts['errorProtectedRoom'], 'error');
+						notify(roomName, t('errorProtectedRoom'), 'error');
 					}
 					else {
-						notify(roomName, texts['unknowError'], 'error');
+						notify(roomName, t('unknowError'), 'error');
 					}
 				}
 			});
@@ -188,6 +188,9 @@ $(document).ready(function() {
 		$listConnectedUsers.append('<li class="nav-header">Utilisateurs connectés</li>');
 		for(userRow in connected) {
 			$listConnectedUsers.append('<li><a href="#" data-user-id="' + connected[userRow].userId + '">' + connected[userRow].name + '</a></li>');
+			
+			// Cache
+			usersNames[connected[userRow].userId] = connected[userRow].name;
 		}
 	};
 
