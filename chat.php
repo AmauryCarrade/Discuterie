@@ -46,51 +46,10 @@
 
     <!-- Le styles -->
     <link href="misc/css/bootstrap.min.css" rel="stylesheet">
+    <link href="misc/css/chat.css" rel="stylesheet">
+
     <style>
-      body {
-        
-      }
-
-      html,
-      body {
-        height: 100%;
-        /* The html and body elements cannot have any padding or margin. */
-      }
-
-      /* Wrapper for page content to push down footer */
-      #wrap {
-        min-height: 100%;
-        height: auto !important;
-        height: 100%;
-        /* Negative indent footer by it's height */
-        margin: 0;
-      }
-
-      .row {
-      	padding-top: 5px; 
-      }
-
-      #content {
-      	/*min-height: 100%;
-        height: auto !important;
-        height: 100%;
-        max-height: 100%;*/
-      	overflow: auto;
-      }
-      #content .wrapper {
-      	padding: 5px;
-      }
-
-      #iconProtectedRoom {
-      	display: none;
-      }
-      #iconProtectedRoom span {
-      	margin-top: 13px;
-      }
-
-      .message-date {
-      	margin-left: 8px;
-      }
+      
     </style>
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
@@ -311,396 +270,56 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="http://code.jquery.com/jquery-migrate-1.1.0.min.js"></script>
     <script src="misc/js/bootstrap.min.js"></script>
-    <!--<script src="misc/js/chat.js"></script>-->
     <script type="text/javascript">
-    	(function($) {
+		var me = {
+				id: '<?php echo $_SESSION['user']['id']; ?>',
+				name: '<?php echo $_SESSION['user']['name']; ?>'
+			},
 
-    		// Utils
-    		var nl2br = function(str) {
-    			// Thx to http://phpjs.org/functions/nl2br/
-    			return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1' + '<br ' + '/>' + '$2');
-    		};
+			$messageText   = $('#messageText'),
+			$messages      = $('#content .wrapper'),
+			$content       = $('#content'),
+			$roomsList     = $('#roomsList'),
+			$notifications = $('#notifications'),
 
-			$(document).ready(function() {
+			authKey        = '<?php echo $token; ?>',
 
-				var me = {
-						id: '<?php echo $_SESSION['user']['id']; ?>',
-						name: '<?php echo $_SESSION['user']['name']; ?>'
-					},
+			rooms          = new Array(),
+			avaliableRooms = new Array(),
+			allowedRooms   = new Array(),
+			typeaheadRooms = new Array(),
+			$data          = $('#dataRooms'),
+			currentRoom    = null,
 
-					$messageText   = $('#messageText'),
-					$messages      = $('#content .wrapper'),
-					$content       = $('#content'),
-					$roomsList     = $('#roomsList'),
-					$notifications = $('#notifications'),
+			texts          = new Array();
 
-					authKey        = '<?php echo $token; ?>',
+		// Texts
+		texts['errorProtectedRoom'] = 'Ce salon est protégé et vous n\'avez pas le droit d\'y accéder.';
+		texts['errorUnknowRoom'] = 'Ce salon n\'existe pas. Vous pouvez le créer en cliquant sur le bouton à droite du champ.';
+		texts['unknowError'] = 'Une erreur s\'est produite. Veuillez réessayer.';
 
-					rooms          = new Array(),
-					avaliableRooms = new Array(),
-					allowedRooms   = new Array(),
-					typeaheadRooms = new Array(),
-					$data          = $('#dataRooms'),
-					currentRoom    = null,
-
-					texts          = new Array();
-
-				// Texts
-				texts['errorProtectedRoom'] = 'Ce salon est protégé et vous n\'avez pas le droit d\'y accéder.';
-				texts['errorUnknowRoom'] = 'Ce salon n\'existe pas. Vous pouvez le créer en cliquant sur le bouton à droite du champ.';
-				texts['unknowError'] = 'Une erreur s\'est produite. Veuillez réessayer.';
-
-				// Generated list of avaliable (public and protected) rooms.
-				<?php
-					foreach($rooms AS $room) {
-						echo 'avaliableRooms[' . $room['room_id'] . '] = new Array(); avaliableRooms[' . $room['room_id'] . '][\'name\'] = \'' . $room['room_name'] . '\'; avaliableRooms[' . $room['room_id'] . '][\'type\'] = \'' . $room['room_type'] . '\';' . "\n";
-					}
-				?>
-				<?php
-					$i = 0;
-					foreach($rooms AS $room) {
-						echo 'typeaheadRooms[' . $i . '] = \'' . $room['room_name'] . '\'' . "\n";
-						$i++;
-					}
-					unset($i);
-				?>
-				<?php
-					foreach($allowedRooms AS $roomId) {
-						echo 'allowedRooms[' . $roomId . '] = \'' . $roomId . '\'' . "\n";
-					}
-				?>
-
-				$.ajaxSetup({
-					url: 'do.php',
-					type: 'POST'
-				});
-
-				// Set the height of the chatbox
-				var updateContentHeight = function() {
-					$content.css('height', (document.body.clientHeight - 250) + 'px')
-							.css('max-height', (document.body.clientHeight - 250) + 'px')
-							.scrollTop(1000);
-				};
-				$(window).resize(updateContentHeight);
-				updateContentHeight();
-
-				$('.tooltip-top').tooltip({placement: 'top'});
-
-				// Show list of rooms on startup.
-				$messages.html($roomsList.html());
-
-
-				// New rooms
-				$('.newRoom').live('click', function() {
-					$('#modalNewRoom').modal('show');
-				});
-				$('#newRoomCreate').click(function() {
-					var $button = $('#newRoomCreate');
-					$button.button('loading');
-
-					var $name = $('#newRoomName'),
-						$type = $('#newRoomType');
-
-					if($name.val() == '') {
-						$name.parent().parent().addClass('error');
-						$button.button('reset');
-					}
-					else {
-						$.ajax({
-							data: {
-								name: $name.val(),
-								type: $type.val(),
-								do: 'newRoom',
-								auth: authKey
-							}, 
-							success: function(id) {
-								if(id == 0) { // SQL error
-									var oldName = $button.val();
-									$button.button('reset').addClass('btn-error').val('Erreur');
-									setTimeout(function() {
-										$button.removeClass('btn-error').val(oldName);
-									}, 4000);
-									return;
-								}
-								$('#modalNewRoom').modal('hide');
-								var name = $name.val().replace(' ', '');
-								var row = '<tr><td>' + id + '</td><td>' + name + '</td><td></td><td><a href="#" class="join" data-room-id="' + id + ' data-room-name="' + name + '">Joindre</a></td><td></td></tr>';
-								if($('#tableRooms tbody tr:first').hasClass('noRooms')) {
-									$('#tableRooms tbody').html(row);
-								}
-								else {
-									$('#tableRooms tbody').append(row);
-								}
-
-								$name.val('');
-
-								document.reload;
-							},
-							error: function() {
-								var oldName = $button.val();
-								$button.button('reset').addClass('btn-error').val('Erreur');
-								setTimeout(function() {
-									$button.removeClass('btn-error').val(oldName);
-								}, 4000);
-							}
-						});
-					}
-				});
-
-
-
-				var generateHTMLMessage = function(message, author, date, preciseDate, time) {
-					if(date == undefined) {
-						var months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
-						var dateOb = new Date();
-						var day = dateOb.getDate() < 10 ? '0' + dateOb.getDate() : dateOb.getDate();
-						var hours = dateOb.getHours() < 10 ? '0' + dateOb.getHours() : dateOb.getHours();
-						var minutes = dateOb.getMinutes() < 10 ? '0' + dateOb.getMinutes() : dateOb.getMinutes();
-						var seconds = dateOb.getSeconds() < 10 ? '0' + dateOb.getSeconds() : dateOb.getSeconds();
-						date = day + ' ' + months[dateOb.getMonth()] + ' ' + dateOb.getFullYear() + ' à ' + hours + ':' + minutes;
-						preciseDate = date + ':' + seconds;
-						time = 'à ' + hours + ':' + minutes;
-					}
-					
-					message = nl2br(message);
-					if(rooms[currentRoom]['lastMessageAuthor'] != author) {
-						return '<p><strong>' + author + '</strong></p><p></p><div class="muted pull-right message-date" title="' + preciseDate + '"><small>' + date + '</small></div><p>' + message + '</p>';
-					}
-					else {
-						return '<div class="muted pull-right message-date" title="' + preciseDate + '"><small>' + time + '</small></div><p>' + message + '</p>';
-					}
-
-				};
-
-				var generateUnnamedHTMLMessage = function(message, enableDate, date, preciseDate, time) {
-					if(enableDate != undefined) {
-						if(date == undefined) {
-							// DOUBLON -> exporter
-							var months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
-							var dateOb = new Date();
-							var day = dateOb.getDate() < 10 ? '0' + dateOb.getDate() : dateOb.getDate();
-							var hours = dateOb.getHours() < 10 ? '0' + dateOb.getHours() : dateOb.getHours();
-							var minutes = dateOb.getMinutes() < 10 ? '0' + dateOb.getMinutes() : dateOb.getMinutes();
-							var seconds = dateOb.getSeconds() < 10 ? '0' + dateOb.getSeconds() : dateOb.getSeconds();
-							date = day + ' ' + months[dateOb.getMonth()] + ' ' + dateOb.getFullYear() + ' à ' + hours + ':' + minutes;
-							preciseDate = date + ':' + seconds;
-						}
-					}
-					message = nl2br(message);
-					if(enableDate != undefined && enableDate == true) {
-						return '<div class="well well-small"><div class="muted pull-right message-date" title="' + preciseDate + '"><small>' + date + '</small></div>' + message + '</div>';
-					}
-					else {
-						return '<div class="well well-small">' + message + '</div>';
-					}
-				};
-
-
-				// Duplicate the insertion of the message in the hidden data div.
-				var appendMessage = function(content, roomId) {
-					$messages.append(content);
-					$content.scrollTop(100000);
-
-					$('#data-room-' + roomId).append(content);
-				};
-
-
-				var notify = function(title, message, type) {
-					var classType = null;
-					if(type = 'error') 			classType = 'alert-error';
-					else if(type = 'success') 	classType = 'alert-success';
-					else if(type = 'info') 		classType = 'alert-info';
-
-					var html  = '<div class="alert ' + classType + '">';
-					    html += '<button type="button" class="close" data-dismiss="alert">&times;</button>';
-    					html += '<strong>' + title + '</strong><br />' + message + '</div>';
-    				$notifications.prepend(html);
-				};
-
-
-				
-				// Join & switch room
-				var $menuRoomsList = $('#menuRoomsList'),
-					$roomName  = $('#roomName'),
-					$listConnectedUsers = $('#listConnectedUsers'), 
-					$frameListConnectedUsers = $('#frameListConnectedUsers'),
-
-					$iconProtectedRoom = $('#iconProtectedRoom');
-
-				$('.secretRoom').typeahead({
-					source: typeaheadRooms,
-					items: 8
-				});
-				$('.formSecretRoom').live('submit', function(e) {
-					e.preventDefault();
-					var roomName = $('.secretRoom').val();
-					if(roomName == '') return;
-
-					$.ajax({
-						dataType: 'json',
-						data: {
-							auth: authKey,
-							do: 'dataFromRoomName',
-							roomName: roomName
-						},
-						success: function(room) {
-							if(room.error != 'unknow' && (room.type == 'public' || allowedRooms[room.id] != undefined)) {
-								$('.secretRoom').val('');
-								$('.formSecretRoom').removeClass('error');
-								joinRoom(room.id, roomName);
-							}
-							else if (room.error != 'unknow' && room.type != 'public' && allowedRooms[room.id] == undefined) {
-								$('.formSecretRoom').addClass('error');
-								setTimeout(function() { $('.formSecretRoom').removeClass('error'); }, 4000);
-								$('.secretRoom').select();
-								notify(roomName, texts['errorProtectedRoom'], 'error');
-								return;
-							}
-							else {
-								$('.formSecretRoom').addClass('error');
-								setTimeout(function() { $('.formSecretRoom').removeClass('error'); }, 4000);
-								$('.secretRoom').select();
-								notify(roomName, texts['errorUnknowRoom'], 'error');
-								return;
-							}
-						}
-					});
-				});
-
-				var switchRoom = function(roomId) {
-					if(currentRoom == roomId) return;
-
-					$messageText.removeAttr('disabled');
-					$roomName.text(rooms[roomId]['name']);
-					$messages.html($('#data-room-' + roomId).html());
-					currentRoom = roomId;
-
-					$('#menuRoomsList li, .goToListRooms').removeClass('active');
-					$('#goToRoom' + roomId).addClass('active');
-
-					if(rooms[roomId]['type'] != 'public') $iconProtectedRoom.show();
-					else 								  $iconProtectedRoom.hide();
-
-					reloadUIConnectedUsers(rooms[roomId]['connected']);
-
-					$messageText.focus();
-				};
-
-				var joinRoom = function(roomId, roomName) {
-					$('#listRoomsNoRooms').hide();
-					$('.goToListRooms').removeClass('active');
-					$('.noticeNotConnected').hide();
-
-					if(rooms[roomId] == undefined) {
-						$.ajax({
-							data: {
-								do: 'join',
-								auth: authKey,
-								room: roomId
-							},
-							dataType: 'json',
-							success: function(roomData) {
-								if(roomData['error'] == 'done') {
-									var html = '<li class="active" data-id="' + roomId + '" id="goToRoom' + roomId + '"><a href="#">' + roomName + '</a></li>';
-									$menuRoomsList.append(html);
-
-									$messageText.removeAttr('disabled');
-									$roomName.text(roomName);
-
-									currentRoom = roomId;
-
-									rooms[currentRoom] = new Array();
-									rooms[currentRoom]['name'] = roomName;
-									rooms[currentRoom]['type'] = roomData['type'];
-									rooms[currentRoom]['lastMessageAuthor'] = null;
-
-									console.log(rooms, currentRoom);
-
-									if(rooms[currentRoom]['type'] != 'public') $iconProtectedRoom.show();
-									else 									   $iconProtectedRoom.hide();
-
-									$data.append('<div id="data-room-' + currentRoom + '"></div>');
-
-									$messages.html('');
-									appendMessage(generateUnnamedHTMLMessage('Vous avez rejoint le salon.'), currentRoom);
-
-									$messageText.focus();
-
-									rooms[currentRoom]['connected'] = roomData['connected'];
-									reloadUIConnectedUsers(roomData['connected']);
-								}
-								else if(roomData['error'] == 'forbidden') {
-									notify(roomName, texts['errorProtectedRoom'], 'error');
-								}
-								else {
-									notify(roomName, texts['unknowError'], 'error');
-								}
-							}
-						});
-					}
-					else {
-						switchRoom(roomId);
-					}
-				};
-
-				var reloadUIConnectedUsers = function(connected) {
-					$listConnectedUsers.html('');
-					$frameListConnectedUsers.show();
-					$listConnectedUsers.append('<li class="nav-header">Utilisateurs connectés</li>');
-					for(userRow in connected) {
-						$listConnectedUsers.append('<li><a href="#" data-user-id="' + connected[userRow].userId + '">' + connected[userRow].name + '</a></li>');
-					}
-				};
-
-				$('#menuRoomsList li').live('click', function() {
-					switchRoom($(this).data('id'));
-				});
-
-				$('.join').live('click', function(event) {
-					joinRoom($(this).data('room-id'), $(this).data('room-name'));
-				});
-				
-				$('.goToListRooms').click(function() {
-					currentRoom = null;
-					$messageText.attr('disabled', 'disabled');
-					$messages.html($roomsList.html());
-					$('#menuRoomsList li').removeClass('active');
-					$(this).addClass('active');
-					$roomName.text('Tous les salons');
-					$frameListConnectedUsers.hide();
-					$iconProtectedRoom.hide();
-				});
-
-
-				// Send a message
-				var sendMessage = function() {
-					var regexMe = /^\/me/i;
-					var htmlMessage;
-					if(regexMe.test($messageText.val())) {
-						htmlMessage = generateUnnamedHTMLMessage('<strong>' + me.name + '</strong>' + $messageText.val().replace('/me ', ' '), true); // true: show date
-						rooms[currentRoom]['lastMessageAuthor'] = null;
-					}
-					else {
-						htmlMessage = generateHTMLMessage($messageText.val(), me.name);
-						rooms[currentRoom]['lastMessageAuthor'] = me.name;
-					}
-					
-					appendMessage(htmlMessage, currentRoom);
-
-					$messageText.val('').focus();
-				};
-
-				$('#messageText').keydown(function (e) {
-					if ((e.keyCode === 10 || e.keyCode == 13) && e.ctrlKey) { 
-						sendMessage(); 
-					}
-				});
-				$('#send').click(sendMessage);
-			});
-
-
-
-		})(jQuery);
+		// Generated list of avaliable (public and protected) rooms.
+		<?php
+			foreach($rooms AS $room) {
+				echo 'avaliableRooms[' . $room['room_id'] . '] = new Array(); avaliableRooms[' . $room['room_id'] . '][\'name\'] = \'' . $room['room_name'] . '\'; avaliableRooms[' . $room['room_id'] . '][\'type\'] = \'' . $room['room_type'] . '\';' . "\n";
+			}
+		?>
+		<?php
+			$i = 0;
+			foreach($rooms AS $room) {
+				echo 'typeaheadRooms[' . $i . '] = \'' . $room['room_name'] . '\'' . "\n";
+				$i++;
+			}
+			unset($i);
+		?>
+		<?php
+			foreach($allowedRooms AS $roomId) {
+				echo 'allowedRooms[' . $roomId . '] = \'' . $roomId . '\'' . "\n";
+			}
+		?>
     </script>
+    <script src="misc/js/utilities.js"></script>
+    <script src="misc/js/rooms.js"></script>
+    <script src="misc/js/messages.js"></script>
   </body>
 </html>
